@@ -5,9 +5,8 @@ import (
 
 	"go-echo-vue/handlers"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo"
-	"github.com/labstack/echo/engine/standard"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
@@ -22,11 +21,11 @@ func main() {
 	e.PUT("/tasks", handlers.PutTask(db))
 	e.DELETE("/tasks/:id", handlers.DeleteTask(db))
 
-	e.Run(standard.New(":8000"))
+	e.Logger.Fatal(e.Start(":8000"))
 }
 
 func initDB(filepath string) *sql.DB {
-	db, err := sql.Open("sqlite3", filepath)
+	db, err := sql.Open("mysql", "root:@tcp(127.0.0.1)/dummy_db")
 
 	// Here we check for any db errors then exit
 	if err != nil {
@@ -44,9 +43,10 @@ func initDB(filepath string) *sql.DB {
 func migrate(db *sql.DB) {
 	sql := `
 	CREATE TABLE IF NOT EXISTS tasks(
-		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-		name VARCHAR NOT NULL
-	);
+		id INTEGER NOT NULL AUTO_INCREMENT,
+		PRIMARY KEY (` + "`id`)," + `
+		name VARCHAR(256)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	`
 
 	_, err := db.Exec(sql)
